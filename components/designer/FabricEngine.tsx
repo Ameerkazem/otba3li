@@ -65,7 +65,7 @@ export default function FabricEngine({
     fabricCanvasRef.current = canvas;
 
     /*
-      تحويل قيم placements.ts
+      تحويل موضع منطقة الطباعة
       من النسب المئوية إلى Pixels.
     */
     const printAreaCenterX =
@@ -107,8 +107,7 @@ export default function FabricEngine({
       printAreaTop + printAreaHeight;
 
     /*
-      المنطقة الآمنة تكون أصغر بقليل
-      من منطقة الطباعة الأساسية.
+      إنشاء Safe Area داخل منطقة الطباعة.
     */
     const safeInset = Math.max(
       10,
@@ -125,10 +124,12 @@ export default function FabricEngine({
       printAreaTop + safeInset;
 
     const safeAreaWidth =
-      printAreaWidth - safeInset * 2;
+      printAreaWidth -
+      safeInset * 2;
 
     const safeAreaHeight =
-      printAreaHeight - safeInset * 2;
+      printAreaHeight -
+      safeInset * 2;
 
     const safeAreaRight =
       safeAreaLeft + safeAreaWidth;
@@ -137,7 +138,7 @@ export default function FabricEngine({
       safeAreaTop + safeAreaHeight;
 
     /*
-      الإطار الخارجي لمنطقة الطباعة.
+      إطار منطقة الطباعة الخارجي.
     */
     const printAreaBorder = new Rect({
       name: "print-area-border",
@@ -166,7 +167,7 @@ export default function FabricEngine({
     });
 
     /*
-      الإطار الداخلي للمنطقة الآمنة.
+      إطار Safe Area الداخلي.
     */
     const safeAreaBorder = new Rect({
       name: "safe-area-border",
@@ -195,7 +196,8 @@ export default function FabricEngine({
     });
 
     /*
-      خط الالتقاط العمودي.
+      خط Snap عمودي.
+      يتحرك إلى اليسار أو الوسط أو اليمين.
     */
     const verticalGuide = new Line(
       [
@@ -220,7 +222,8 @@ export default function FabricEngine({
     );
 
     /*
-      خط الالتقاط الأفقي.
+      خط Snap أفقي.
+      يتحرك إلى الأعلى أو الوسط أو الأسفل.
     */
     const horizontalGuide = new Line(
       [
@@ -251,9 +254,6 @@ export default function FabricEngine({
       horizontalGuide
     );
 
-    /*
-      إخفاء خطوط Snap Guides.
-    */
     const hideSnapGuides = () => {
       verticalGuide.set({
         visible: false,
@@ -264,8 +264,32 @@ export default function FabricEngine({
       });
     };
 
+    const showVerticalGuide = (
+      x: number
+    ) => {
+      verticalGuide.set({
+        x1: x,
+        y1: printAreaTop,
+        x2: x,
+        y2: printAreaBottom,
+        visible: true,
+      });
+    };
+
+    const showHorizontalGuide = (
+      y: number
+    ) => {
+      horizontalGuide.set({
+        x1: printAreaLeft,
+        y1: y,
+        x2: printAreaRight,
+        y2: y,
+        visible: true,
+      });
+    };
+
     /*
-      التحقق من وجود التصميم داخل Safe Area.
+      فحص التصميم داخل Safe Area.
     */
     const updateSafeAreaFeedback = (
       object: FabricObject
@@ -287,69 +311,172 @@ export default function FabricEngine({
         objectRight <= safeAreaRight &&
         objectBottom <= safeAreaBottom;
 
-      object.set({
-        borderColor: insideSafeArea
+      const feedbackColor =
+        insideSafeArea
           ? "#22c55e"
-          : "#ef4444",
+          : "#ef4444";
 
-        cornerColor: insideSafeArea
-          ? "#22c55e"
-          : "#ef4444",
+      object.set({
+        borderColor: feedbackColor,
+        cornerColor: feedbackColor,
       });
 
       safeAreaBorder.set({
-        stroke: insideSafeArea
-          ? "#22c55e"
-          : "#ef4444",
+        stroke: feedbackColor,
       });
     };
 
     /*
-      Snap إلى منتصف منطقة الطباعة.
+      Snap للمركز والحواف.
     */
-    const applySnapGuides = (
+    const applySmartSnap = (
       object: FabricObject
     ) => {
+      if (
+        object.get("name") !==
+        "uploaded-design"
+      ) {
+        return;
+      }
+
+      hideSnapGuides();
+
       object.setCoords();
 
-      const objectCenter =
-        object.getCenterPoint();
+      const bounds =
+        object.getBoundingRect();
 
-      let nextCenterX = objectCenter.x;
-      let nextCenterY = objectCenter.y;
+      const objectLeft = bounds.left;
+      const objectTop = bounds.top;
+
+      const objectRight =
+        bounds.left + bounds.width;
+
+      const objectBottom =
+        bounds.top + bounds.height;
+
+      const objectCenterX =
+        bounds.left + bounds.width / 2;
+
+      const objectCenterY =
+        bounds.top + bounds.height / 2;
+
+      let moveX = 0;
+      let moveY = 0;
 
       let snappedX = false;
       let snappedY = false;
 
+      /*
+        Snap أفقي:
+        يسار، مركز، يمين.
+      */
       if (
         Math.abs(
-          objectCenter.x -
+          objectCenterX -
             printAreaCenterX
         ) <= SNAP_DISTANCE
       ) {
-        nextCenterX =
-          printAreaCenterX;
+        moveX =
+          printAreaCenterX -
+          objectCenterX;
 
         snappedX = true;
+
+        showVerticalGuide(
+          printAreaCenterX
+        );
+      } else if (
+        Math.abs(
+          objectLeft -
+            printAreaLeft
+        ) <= SNAP_DISTANCE
+      ) {
+        moveX =
+          printAreaLeft -
+          objectLeft;
+
+        snappedX = true;
+
+        showVerticalGuide(
+          printAreaLeft
+        );
+      } else if (
+        Math.abs(
+          objectRight -
+            printAreaRight
+        ) <= SNAP_DISTANCE
+      ) {
+        moveX =
+          printAreaRight -
+          objectRight;
+
+        snappedX = true;
+
+        showVerticalGuide(
+          printAreaRight
+        );
       }
 
+      /*
+        Snap عمودي:
+        أعلى، مركز، أسفل.
+      */
       if (
         Math.abs(
-          objectCenter.y -
+          objectCenterY -
             printAreaCenterY
         ) <= SNAP_DISTANCE
       ) {
-        nextCenterY =
-          printAreaCenterY;
+        moveY =
+          printAreaCenterY -
+          objectCenterY;
 
         snappedY = true;
+
+        showHorizontalGuide(
+          printAreaCenterY
+        );
+      } else if (
+        Math.abs(
+          objectTop -
+            printAreaTop
+        ) <= SNAP_DISTANCE
+      ) {
+        moveY =
+          printAreaTop -
+          objectTop;
+
+        snappedY = true;
+
+        showHorizontalGuide(
+          printAreaTop
+        );
+      } else if (
+        Math.abs(
+          objectBottom -
+            printAreaBottom
+        ) <= SNAP_DISTANCE
+      ) {
+        moveY =
+          printAreaBottom -
+          objectBottom;
+
+        snappedY = true;
+
+        showHorizontalGuide(
+          printAreaBottom
+        );
       }
 
       if (snappedX || snappedY) {
+        const currentCenter =
+          object.getCenterPoint();
+
         object.setPositionByOrigin(
           new Point(
-            nextCenterX,
-            nextCenterY
+            currentCenter.x + moveX,
+            currentCenter.y + moveY
           ),
           "center",
           "center"
@@ -357,18 +484,11 @@ export default function FabricEngine({
 
         object.setCoords();
       }
-
-      verticalGuide.set({
-        visible: snappedX,
-      });
-
-      horizontalGuide.set({
-        visible: snappedY,
-      });
     };
 
     /*
-      منع التصميم من تجاوز منطقة الطباعة.
+      منع التصميم من الخروج
+      من Print Area.
     */
     const lockObjectInsidePrintArea = (
       object: FabricObject
@@ -386,7 +506,7 @@ export default function FabricEngine({
         object.getBoundingRect();
 
       /*
-        إذا أصبح التصميم أكبر من المنطقة
+        إذا أصبح أكبر من منطقة الطباعة،
         يتم تصغيره تلقائياً.
       */
       if (
@@ -394,7 +514,8 @@ export default function FabricEngine({
         bounds.height > printAreaHeight
       ) {
         const widthCorrection =
-          printAreaWidth / bounds.width;
+          printAreaWidth /
+          bounds.width;
 
         const heightCorrection =
           printAreaHeight /
@@ -434,48 +555,60 @@ export default function FabricEngine({
         bounds.left < printAreaLeft
       ) {
         correctionX =
-          printAreaLeft - bounds.left;
+          printAreaLeft -
+          bounds.left;
       }
 
       if (
         objectRight > printAreaRight
       ) {
         correctionX =
-          printAreaRight - objectRight;
+          printAreaRight -
+          objectRight;
       }
 
       if (
         bounds.top < printAreaTop
       ) {
         correctionY =
-          printAreaTop - bounds.top;
+          printAreaTop -
+          bounds.top;
       }
 
       if (
-        objectBottom > printAreaBottom
+        objectBottom >
+        printAreaBottom
       ) {
         correctionY =
-          printAreaBottom - objectBottom;
+          printAreaBottom -
+          objectBottom;
       }
 
-      object.set({
-        left:
-          (object.left ?? 0) +
-          correctionX,
+      if (
+        correctionX !== 0 ||
+        correctionY !== 0
+      ) {
+        const currentCenter =
+          object.getCenterPoint();
 
-        top:
-          (object.top ?? 0) +
-          correctionY,
-      });
+        object.setPositionByOrigin(
+          new Point(
+            currentCenter.x +
+              correctionX,
 
-      object.setCoords();
+            currentCenter.y +
+              correctionY
+          ),
+          "center",
+          "center"
+        );
+
+        object.setCoords();
+      }
 
       updateSafeAreaFeedback(object);
     };
 
-    /*
-      أثناء تحريك التصميم.
-    */
     canvas.on(
       "object:moving",
       (event) => {
@@ -483,16 +616,15 @@ export default function FabricEngine({
 
         if (!object) return;
 
-        applySnapGuides(object);
-        lockObjectInsidePrintArea(object);
+        applySmartSnap(object);
+        lockObjectInsidePrintArea(
+          object
+        );
 
         canvas.requestRenderAll();
       }
     );
 
-    /*
-      أثناء التكبير والتصغير.
-    */
     canvas.on(
       "object:scaling",
       (event) => {
@@ -501,15 +633,15 @@ export default function FabricEngine({
         if (!object) return;
 
         hideSnapGuides();
-        lockObjectInsidePrintArea(object);
+
+        lockObjectInsidePrintArea(
+          object
+        );
 
         canvas.requestRenderAll();
       }
     );
 
-    /*
-      أثناء الدوران.
-    */
     canvas.on(
       "object:rotating",
       (event) => {
@@ -518,15 +650,15 @@ export default function FabricEngine({
         if (!object) return;
 
         hideSnapGuides();
-        lockObjectInsidePrintArea(object);
+
+        lockObjectInsidePrintArea(
+          object
+        );
 
         canvas.requestRenderAll();
       }
     );
 
-    /*
-      بعد انتهاء التعديل.
-    */
     canvas.on(
       "object:modified",
       (event) => {
@@ -544,16 +676,13 @@ export default function FabricEngine({
       }
     );
 
-    canvas.on(
-      "mouse:up",
-      () => {
-        hideSnapGuides();
-        canvas.requestRenderAll();
-      }
-    );
+    canvas.on("mouse:up", () => {
+      hideSnapGuides();
+      canvas.requestRenderAll();
+    });
 
     /*
-      تحميل التصميم داخل Fabric.
+      تحميل الصورة داخل المحرر.
     */
     const addDesignToCanvas =
       async () => {
@@ -571,18 +700,24 @@ export default function FabricEngine({
           if (cancelled) return;
 
           const imageWidth =
-            image.width || printAreaWidth;
+            image.width ||
+            printAreaWidth;
 
           const imageHeight =
-            image.height || printAreaHeight;
+            image.height ||
+            printAreaHeight;
 
           /*
-            ندخل التصميم بحجم لا يتجاوز
-            المنطقة الآمنة عند الرفع.
+            إدخال الصورة أولاً
+            داخل Safe Area.
           */
           const scale = Math.min(
-            safeAreaWidth / imageWidth,
-            safeAreaHeight / imageHeight,
+            safeAreaWidth /
+              imageWidth,
+
+            safeAreaHeight /
+              imageHeight,
+
             1
           );
 
@@ -595,13 +730,16 @@ export default function FabricEngine({
             originX: "center",
             originY: "center",
 
-            angle: placement.rotate ?? 0,
+            angle:
+              placement.rotate ?? 0,
 
             cornerStyle: "circle",
+
             cornerColor: "#22c55e",
             borderColor: "#22c55e",
 
             transparentCorners: false,
+
             padding: 6,
 
             lockScalingFlip: true,
