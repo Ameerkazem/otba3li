@@ -28,7 +28,7 @@ export default function ProductDesigner({
         </p>
       </div>
 
-      <div className="relative aspect-square">
+      <div className="relative mx-auto aspect-square w-full max-w-xl overflow-hidden bg-zinc-950">
 
         <MockupLayer
           product={product}

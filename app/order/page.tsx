@@ -8,7 +8,7 @@ import ProductPreviewCard from "@/components/order/ProductPreviewCard";
 import SizePicker from "@/components/order/SizePicker";
 import SubmitOrder from "@/components/order/SubmitOrder";
 import UploadImage from "@/components/order/UploadImage";
-import DesignerCanvas from "@/components/designer/DesignerCanvas";
+
 
 import { products } from "@/lib/products";
 
@@ -202,7 +202,7 @@ export default function OrderPage() {
               preview={preview}
             />
 
-            <DesignerCanvas preview={preview} />
+            
 
             <PriceCard
               product={product}
