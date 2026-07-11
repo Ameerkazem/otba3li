@@ -4,7 +4,9 @@ import DesignerToolbar from "./DesignerToolbar";
 import FabricEngine from "./FabricEngine";
 import MockupLayer from "./MockupLayer";
 
-import { getDesignPlacement } from "@/lib/placements";
+import {
+  getDesignPlacement,
+} from "@/lib/placements";
 
 type ProductDesignerProps = {
   product: string;
@@ -17,7 +19,8 @@ export default function ProductDesigner({
   color,
   preview,
 }: ProductDesignerProps) {
-  const placement = getDesignPlacement(product);
+  const placement =
+    getDesignPlacement(product);
 
   return (
     <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900">
@@ -33,40 +36,23 @@ export default function ProductDesigner({
       </div>
 
       {/* مساحة الموك أب والمحرر */}
-      <div className="relative mx-auto aspect-square w-full max-w-xl overflow-hidden bg-zinc-950">
-        {/* الطبقة الأولى: صورة المنتج */}
+      <div className="relative mx-auto aspect-square w-full max-w-[500px] overflow-hidden bg-zinc-950">
+        {/* صورة المنتج */}
         <MockupLayer
           product={product}
           color={color}
         />
 
-        {/* دليل منطقة الطباعة */}
+        {/* محرر Fabric */}
         {product && (
-          <div
-            className="pointer-events-none absolute z-10 border-2 border-dashed border-orange-500/70"
-            style={{
-              top: placement.top,
-              left: placement.left,
-              width: placement.width,
-              height: placement.height,
-              transform: `
-                translate(-50%, -50%)
-                rotate(${placement.rotate ?? 0}deg)
-              `,
-              borderRadius:
-                placement.borderRadius ?? "0px",
-            }}
+          <FabricEngine
+            preview={preview}
+            placement={placement}
           />
         )}
-
-        {/* الطبقة الثانية: Fabric Canvas */}
-        <FabricEngine
-          preview={preview}
-          placement={placement}
-        />
       </div>
 
-      {/* أزرار التحكم لاحقًا */}
+      {/* شريط الأدوات */}
       <DesignerToolbar />
     </div>
   );
