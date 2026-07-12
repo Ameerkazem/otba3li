@@ -1,48 +1,57 @@
+import Image from "next/image";
+import Link from "next/link";
+
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-zinc-800 py-12 px-6">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10">
-
+    <footer className="bg-[#0a0a0f] px-4 py-12 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-10 border-b border-white/10 pb-10 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <h3 className="text-2xl font-bold text-white">
-            اطبعلي
-          </h3>
+          <Link href="/" className="inline-block">
+            <Image
+              src="/logo-white.svg"
+              alt="اطبعلي"
+              width={230}
+              height={66}
+              className="h-auto w-[180px]"
+            />
+          </Link>
 
-          <p className="text-gray-400 mt-4 leading-8">
-            نقدم خدمات الطباعة على الملابس، الأكواب، كفرات الموبايل،
-            والهدايا الدعائية بجودة عالية وأسعار مناسبة.
+          <p className="mt-5 max-w-sm leading-7 text-slate-400">
+            منصة عراقية للطباعة حسب الطلب، من اختيار المنتج إلى تجهيز التصميم وإرسال الطلب.
           </p>
         </div>
 
         <div>
-          <h3 className="text-white font-bold text-xl">
-            روابط سريعة
-          </h3>
-
-          <ul className="space-y-3 mt-5 text-gray-400">
-            <li><a href="#">الرئيسية</a></li>
-            <li><a href="#">الخدمات</a></li>
-            <li><a href="#">المعرض</a></li>
-            <li><a href="#">تواصل معنا</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-white font-bold text-xl">
-            معلومات التواصل
-          </h3>
-
-          <div className="mt-5 text-gray-400 space-y-3">
-            <p>📍 كربلاء - العراق</p>
-            <p>📞 +964 7809903885</p>
-            <p>✉️ ameermushkla908@gmail.com</p>
+          <h3 className="font-black">روابط سريعة</h3>
+          <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
+            <Link href="/">الرئيسية</Link>
+            <Link href="#products">المنتجات</Link>
+            <Link href="/order">ابدأ التصميم</Link>
           </div>
         </div>
 
+        <div>
+          <h3 className="font-black">المنتجات</h3>
+          <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
+            <span>تيشيرتات</span>
+            <span>أكواب</span>
+            <span>كفرات موبايل</span>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="font-black">تواصل معنا</h3>
+          <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
+            <span>العراق</span>
+            <span>أضف رقم الهاتف هنا</span>
+            <span>أضف حساب إنستغرام هنا</span>
+          </div>
+        </div>
       </div>
 
-      <div className="border-t border-zinc-800 mt-10 pt-6 text-center text-gray-500">
-        © 2026 اطبعلي — جميع الحقوق محفوظة.
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <p>© 2026 اطبعلي. جميع الحقوق محفوظة.</p>
+        <p>صُمم ليكون سريعًا ومتجاوبًا مع الموبايل.</p>
       </div>
     </footer>
   );
